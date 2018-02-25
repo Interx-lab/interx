@@ -7,7 +7,7 @@ import com.mongodb.MongoClient;
 public class MongoDatabase
 {   
     Logger logger = Logger.getLogger(MongoClient.class.getName());
-    private static MongoDatabase instance;
+    private static volatile MongoDatabase instance;
     private static volatile MongoClient connection;
     
     private MongoDatabase() {}
@@ -28,7 +28,7 @@ public class MongoDatabase
 
     /* Connects to a database with arguments in parameter list. Should be called only once. */
     public void connect(String host, int port) {
-        if(instance != null) {
+        if(connection != null) {
             throw new AssertionError("The connection was already established");
         }
         try {
