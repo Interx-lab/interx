@@ -59,6 +59,8 @@ public class RpcServer
         public void send(Message req, StreamObserver<EmptyMessage> responseObserver)
         {
             System.out.println(req.getJson());
+            MongoDatabaseManager.getInstance().putDataInCollection(req.getJson(), "test123");
+            MongoDatabaseManager.getInstance().printDataInCollection("test123");
             EmptyMessage reply = EmptyMessage.newBuilder().build();
             responseObserver.onNext(reply);
             responseObserver.onCompleted();

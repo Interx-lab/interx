@@ -74,8 +74,7 @@ dependencies {
     compile 'io.grpc:grpc-protobuf:1.9.0'
     compile 'io.grpc:grpc-stub:1.9.0'
     
-    compile 'org.mongodb:mongo-java-driver:2.13.3'
-    compile 'org.mongodb:bson:2.13.3'
+    compile 'org.mongodb:mongodb-driver:3.6.3'
     
     compile "com.beust:jcommander:1.71"
     // Use JUnit test framework

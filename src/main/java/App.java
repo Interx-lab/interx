@@ -13,7 +13,12 @@ public class App
             .build()
             .parse(args);
         
-        MongoDatabase.getInstance().connect(commandLineArgs.noSqlDBHost, commandLineArgs.noSqlDBPort);
+        DBConnectionData noSqlDBConnectionData = new DBConnectionData();
+        noSqlDBConnectionData.setHost(commandLineArgs.noSqlDBHost);
+        noSqlDBConnectionData.setPort(commandLineArgs.noSqlDBPort);
+        noSqlDBConnectionData.setDbName(commandLineArgs.noSqlDBName);
+
+        MongoDatabaseManager.getInstance().connect(noSqlDBConnectionData);
         
         final RpcServer server = new RpcServer();
         server.start();

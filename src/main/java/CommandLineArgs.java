@@ -7,4 +7,7 @@ public class CommandLineArgs
     
     @Parameter(names = "--nosqldbport", description = "Port number of NoSQL database you wish to connect")
     public Integer noSqlDBPort = 27017;
+    
+    @Parameter(names = "--nosqldbname", description = "Name of NoSQL database you want to use")
+    public String noSqlDBName = "data";
 }
