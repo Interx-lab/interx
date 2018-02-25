@@ -63,12 +63,21 @@ repositories {
 dependencies {
     // This dependency is found on compile classpath of this component and consumers.
     compile 'com.google.guava:guava:23.0'
+    
     compile 'com.amazonaws:aws-java-sdk:1.9.6'
+    
     compile group: 'mysql', name: 'mysql-connector-java', version: '5.1.6'
+    
     compile 'com.google.code.gson:gson:2.8.2'
-     compile 'io.grpc:grpc-netty:1.9.0'
+    
+    compile 'io.grpc:grpc-netty:1.9.0'
     compile 'io.grpc:grpc-protobuf:1.9.0'
     compile 'io.grpc:grpc-stub:1.9.0'
+    
+    compile 'org.mongodb:mongo-java-driver:2.13.3'
+    compile 'org.mongodb:bson:2.13.3'
+    
+    compile "com.beust:jcommander:1.71"
     // Use JUnit test framework
     testCompile 'junit:junit:4.12'
 }
