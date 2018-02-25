@@ -1,65 +1,78 @@
-import io.netty.bootstrap.ServerBootstrap;
+import interx.protos.Protocol.Message;
+import interx.protos.Protocol.EmptyMessage;
+import interx.protos.ServerGrpc;
+import io.grpc.Server;
+import io.grpc.ServerBuilder;
+import io.grpc.stub.StreamObserver;
+import java.io.IOException;
+import java.util.logging.Logger;
 
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
+public class App
+{
 
-import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
+    private static final Logger logger = Logger.getLogger(App.class.getName());
+    private Server server;
 
-public class App {
-private int port;
-    
-    public App(int port) {
-        this.port = port;
+    private void start() throws IOException
+    {
+        /* The port on which the server should run */
+        int port = 50051;
+        server = ServerBuilder.forPort(port)
+                               .addService(new ServerImpl())
+                               .build()
+                               .start();
+        logger.info("Server started, listening on " + port);
+        Runtime.getRuntime().addShutdownHook(new Thread()
+        {
+            @Override
+            public void run()
+            {
+                // Use stderr here since the logger may have been reset by its
+                // JVM shutdown hook.
+                System.err.println("*** shutting down gRPC server since JVM is shutting down");
+                App.this.stop();
+                System.err.println("*** server shut down");
+            }
+        });
     }
-    
-    public void run() throws Exception {
-        EventLoopGroup bossGroup = new NioEventLoopGroup(); // (1)
-        EventLoopGroup workerGroup = new NioEventLoopGroup();
-        try {
-            ServerBootstrap b = new ServerBootstrap(); // (2)
-            b.group(bossGroup, workerGroup)
-             .channel(NioServerSocketChannel.class) // (3)
-             .childHandler(new ChannelInitializer<SocketChannel>() { // (4)
-                 @Override
-                 public void initChannel(SocketChannel ch) throws Exception {
-                     ch.pipeline().addLast(new DiscardServerHandler());
-                 }
-             })
-             .option(ChannelOption.SO_BACKLOG, 128)          // (5)
-             .childOption(ChannelOption.SO_KEEPALIVE, true); // (6)
-    
-            // Bind and start to accept incoming connections.
-            ChannelFuture f = b.bind(port).sync(); // (7)
-    
-            // Wait until the server socket is closed.
-            // In this example, this does not happen, but you can do that to gracefully
-            // shut down your server.
-            f.channel().closeFuture().sync();
-        } finally {
-            workerGroup.shutdownGracefully();
-            bossGroup.shutdownGracefully();
+
+    private void stop()
+    {
+        if (server != null) {
+            server.shutdown();
         }
     }
-    
-    public static void main(String[] args) throws Exception {
-        AmazonS3 s3 = new AmazonS3Client();
-        Region usWest2 = Region.getRegion(Regions.US_WEST_2);
-        s3.setRegion(usWest2);
-        
-        int port;
-        if (args.length > 0) {
-            port = Integer.parseInt(args[0]);
-        } else {
-            port = 8080;
+
+    /**
+     * Await termination on the main thread since the grpc library uses daemon
+     * threads.
+     */
+    private void blockUntilShutdown() throws InterruptedException
+    {
+        if (server != null) {
+            server.awaitTermination();
         }
-        new App(port).run();
+    }
+
+    /**
+     * Main launches the server from the command line.
+     */
+    public static void main(String[] args) throws IOException, InterruptedException
+    {
+        final App server = new App();
+        server.start();
+        server.blockUntilShutdown();
+    }
+
+    static class ServerImpl extends ServerGrpc.ServerImplBase
+    {
+        @Override
+        public void send(Message req, StreamObserver<EmptyMessage> responseObserver)
+        {
+            System.out.println(req.getJson());
+            EmptyMessage reply = EmptyMessage.newBuilder().build();
+            responseObserver.onNext(reply);
+            responseObserver.onCompleted();
+        }
     }
 }
